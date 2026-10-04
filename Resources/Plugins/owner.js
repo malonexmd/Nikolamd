@@ -6,13 +6,13 @@
  *   OWNER_NAME       (default: "Nikola MD")
  *   OWNER_WHATSAPP   (default: "254711815459")
  *   OWNER_GITHUB     (default: "https://github.com/malonexmd/Nikolamd")
- *   OWNER_SUPPORT    (default: "N/A")
+ *   OWNER_SUPPORT    (default: "nikolaklaus0@gmail.com")
  */
 
 const OWNER_NAME     = process.env.OWNER_NAME     || 'Nikola MD';
 const OWNER_WHATSAPP = process.env.OWNER_WHATSAPP || '254711815459';
 const OWNER_GITHUB   = process.env.OWNER_GITHUB   || 'https://github.com/malonexmd/Nikolamd';
-const OWNER_SUPPORT  = process.env.OWNER_SUPPORT  || 'N/A';
+const OWNER_SUPPORT  = process.env.OWNER_SUPPORT  || 'nikolaklaus0@gmail.com';
 
 module.exports = () => ({
   name: "Owner Info",

@@ -2,8 +2,7 @@
  * NIKOLA MD — Welcome Command
  *
  * Generates a stylized welcome message for a group member.
- * Can be used manually by replying to a user or mentioning them.
- * Use: .welcome @user  OR  .welcome (replying to a message)
+ * Use: .welcome @user  OR  .welcome (replying to a message)  OR  .welcome (alone)
  *
  * Note: This is a manual trigger. For automatic welcome on group-join,
  * a separate event handler would need to be wired into the obfuscated
@@ -18,46 +17,33 @@ module.exports = () => ({
   description: "Send a stylish welcome message to a group member.",
   category: "Group",
 
-  run: async ({ m, Cypher, sessionId, args }) => {
+  run: async ({ m, Cypher, args, sessionId }) => {
     try {
       // Resolve target user: mention, reply, or sender
       let targetJid = '';
       let targetName = '';
 
-      if (m.quoted && m.quoted.sender) {
+      if (m.mentionedJid && m.mentionedJid.length > 0) {
+        targetJid = m.mentionedJid[0];
+        targetName = args.join(' ').replace(/@\d+/g, '').trim() || targetJid.split('@')[0];
+      } else if (m.quoted && m.quoted.sender) {
         targetJid = m.quoted.sender;
         targetName = m.quoted.pushName || targetJid.split('@')[0];
-      } else if (args && args.length > 0) {
-        // Try to extract a mentioned JID
-        const mention = m.message?.extendedTextMessage?.contextInfo?.mentionedJid?.[0];
-        if (mention) {
-          targetJid = mention;
-          targetName = args.join(' ').replace(/@\d+/g, '').trim() || mention.split('@')[0];
-        }
-      }
-
-      if (!targetJid) {
+      } else {
         targetJid = m.sender || sessionId;
         targetName = m.pushName || targetJid.split('@')[0];
       }
 
-      // Get group name if available
+      // Get group name + member count if in a group
       let groupName = 'this group';
-      try {
-        if (m.isGroup) {
+      let memberCount = 'N/A';
+      if (m.isGroup) {
+        try {
           const meta = await Cypher.groupMetadata(m.chat);
           groupName = meta.subject || groupName;
-        }
-      } catch {}
-
-      // Count members if group
-      let memberCount = 'N/A';
-      try {
-        if (m.isGroup) {
-          const meta = await Cypher.groupMetadata(m.chat);
           memberCount = meta.participants?.length || 'N/A';
-        }
-      } catch {}
+        } catch {}
+      }
 
       const now = new Date().toLocaleString('en-GB', {
         weekday: 'short',
@@ -68,7 +54,7 @@ module.exports = () => ({
         minute: '2-digit'
       });
 
-      const text =
+      const caption =
         `╭───────────────────\n` +
         `│ ♻️ *WELCOME*\n` +
         `│\n` +
@@ -86,40 +72,30 @@ module.exports = () => ({
 
       // Try to fetch the target's profile picture and send it with the welcome text
       try {
-        const ppUrl = await Cypher.profilePictureUrl(targetJid, 'image').catch(() => null);
-        if (ppUrl) {
-          const { default: axios } = await import('axios');
-          const res = await axios.get(ppUrl, { responseType: 'arraybuffer', timeout: 5000 });
-          const imgBuf = Buffer.from(res.data, 'binary');
-          await Cypher.sendMessage(
-            m.chat,
-            {
-              image: imgBuf,
-              caption: text,
-              mentions: [targetJid]
-            },
-            { quoted: m }
-          );
-          return;
-        }
-      } catch {}
-
-      // Fallback: text-only welcome
-      await Cypher.sendMessage(
-        m.chat,
-        {
-          text,
-          mentions: [targetJid]
-        },
-        { quoted: m }
-      );
+        const ppUrl = await Cypher.profilePictureUrl(targetJid, 'image');
+        await Cypher.sendMessage(
+          m.chat,
+          {
+            image: { url: ppUrl },
+            caption,
+            mentions: [targetJid]
+          },
+          { quoted: m }
+        );
+      } catch {
+        // No profile pic (privacy) — fallback to text-only welcome
+        await Cypher.sendMessage(
+          m.chat,
+          {
+            text: caption,
+            mentions: [targetJid]
+          },
+          { quoted: m }
+        );
+      }
     } catch (error) {
       console.error('NIKOLA MD welcome error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Could not generate welcome message.' },
-        { quoted: m }
-      );
+      m.reply('⚠️ Could not generate welcome message. ' + (error.message || ''));
     }
   }
 });

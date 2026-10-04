@@ -47,14 +47,10 @@ module.exports = () => ({
         `   — *${quote.author}*\n\n` +
         `♻️ Powered by *NIKOLA MD*`;
 
-      await Cypher.sendMessage(m.chat, { text }, { quoted: m });
+      m.reply(text);
     } catch (error) {
       console.error('NIKOLA MD quote error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Could not fetch a quote right now.' },
-        { quoted: m }
-      );
+      m.reply('⚠️ Could not fetch a quote right now.');
     }
   }
 });

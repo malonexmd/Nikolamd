@@ -1,49 +1,47 @@
 /**
  * NIKOLA MD — Tagall Command
  * Mentions every member of a group with an optional custom message.
- * Admin-only.
+ * Admin-only — uses the project's getGroupRoles helper for reliable admin checks.
  */
+
+const { getGroupRoles } = require('../Functions/group-antis.js');
 
 module.exports = () => ({
   name: "Tag All Command",
   triggers: ["tagall", "everyone", "hidetag"],
   react: "📣",
   description: "Mention every member of the group (admin only).",
-  category: "Group",
+  category: "Group Admin",
+  owner: true,
 
   run: async ({ m, Cypher, args }) => {
+    if (!m.isGroup) {
+      return m.reply("⚠️ *This command can only be used in groups!*");
+    }
+
     try {
-      if (!m.isGroup) {
-        return await Cypher.sendMessage(
-          m.chat,
-          { text: '⚠️ This command can only be used in groups.' },
-          { quoted: m }
-        );
+      const { isSenderAdmin, isBotAdmin } = await getGroupRoles(Cypher, m);
+
+      if (!isSenderAdmin) {
+        return m.reply("⚠️ *Only group admins can use this command.*");
+      }
+
+      if (!isBotAdmin) {
+        return m.reply("⚠️ *Bot needs to be an admin to tag all members.*");
       }
 
       // Fetch group metadata
       const meta = await Cypher.groupMetadata(m.chat);
-      const senderId = (m.sender || '').split(':')[0];
-
-      // Check admin rights
-      const sender = meta.participants.find(p =>
-        (p.id || '').split(':')[0] === senderId
-      );
-      if (!sender || !sender.admin) {
-        return await Cypher.sendMessage(
-          m.chat,
-          { text: '⚠️ Only group admins can use this command.' },
-          { quoted: m }
-        );
-      }
 
       // Build mentions list (everyone except the bot itself)
-      const botId = Cypher.user?.id?.split(':')[0] || '';
+      const botId = (Cypher.user?.id || '').split(':')[0];
       const mentions = meta.participants
         .map(p => p.id)
         .filter(id => !id.startsWith(botId));
 
-      const customMsg = args && args.length > 0 ? args.join(' ') : '📣 *Attention everyone*';
+      const customMsg = args && args.length > 0 ? args.join(' ') : 'Attention everyone';
+      const senderId = (m.sender || '').split(':')[0];
+
       const header =
         `╭─❖ ♻️ *NIKOLA MD — Tag All*\n` +
         `│ 👑 By: *@${senderId}*\n` +
@@ -68,11 +66,7 @@ module.exports = () => ({
       );
     } catch (error) {
       console.error('NIKOLA MD tagall error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Failed to tag members. ' + (error.message || '') },
-        { quoted: m }
-      );
+      m.reply('❌ *Failed to tag members.* ' + (error.message || ''));
     }
   }
 });

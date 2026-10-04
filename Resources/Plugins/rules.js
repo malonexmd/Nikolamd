@@ -35,14 +35,10 @@ module.exports = () => ({
         `⚠️ Violators will be removed without warning.\n\n` +
         `♻️ Powered by *NIKOLA MD*`;
 
-      await Cypher.sendMessage(m.chat, { text }, { quoted: m });
+      m.reply(text);
     } catch (error) {
       console.error('NIKOLA MD rules error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Could not fetch group rules.' },
-        { quoted: m }
-      );
+      m.reply('⚠️ Could not fetch group rules.');
     }
   }
 });

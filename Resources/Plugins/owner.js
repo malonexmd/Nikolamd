@@ -20,14 +20,10 @@ module.exports = () => ({
         `📧 Support: *N/A*\n\n` +
         `♻️ Powered by *NIKOLA MD*`;
 
-      await Cypher.sendMessage(m.chat, { text }, { quoted: m });
+      m.reply(text);
     } catch (error) {
       console.error('NIKOLA MD owner error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Could not fetch owner info.' },
-        { quoted: m }
-      );
+      m.reply('⚠️ Could not fetch owner info.');
     }
   }
 });

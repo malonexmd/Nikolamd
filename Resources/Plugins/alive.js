@@ -76,11 +76,7 @@ module.exports = () => ({
       );
     } catch (error) {
       console.error('NIKOLA MD alive error:', error);
-      await Cypher.sendMessage(
-        m.chat,
-        { text: '⚠️ Failed to fetch bot status. Please try again later.' },
-        { quoted: m }
-      );
+      m.reply('⚠️ Failed to fetch bot status. Please try again later.');
     }
   }
 });

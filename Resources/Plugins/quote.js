@@ -19,7 +19,7 @@ const FALLBACK_QUOTES = [
 
 module.exports = () => ({
   name: "Random Quote",
-  triggers: ["quote", "motivate", "inspire"],
+  triggers: ["quote", "motivate", "dailyquote"],
   react: "💬",
   description: "Get a random inspirational quote.",
   category: "Fun",

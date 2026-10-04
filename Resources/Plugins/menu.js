@@ -9,7 +9,7 @@
 
 module.exports = () => ({
   name: "Menu Command",
-  triggers: ["menu", "help", "commands", "list"],
+  triggers: ["menu", "help", "commands"],
   react: "♻️",
   description: "Shows all available commands grouped by category.",
   category: "Utility",

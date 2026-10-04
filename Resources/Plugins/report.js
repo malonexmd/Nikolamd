@@ -7,9 +7,9 @@
 
 const axios = require('axios');
 
-// Owner WhatsApp JID — set BOT_OWNER_JID env var to your WhatsApp number
-// (e.g. 254700000000@s.whatsapp.net)
-const OWNER_JID = process.env.BOT_OWNER_JID || '';
+// Owner WhatsApp JID — defaults to Nikola MD's number.
+// Override with BOT_OWNER_JID env var if you change your number.
+const OWNER_JID = process.env.BOT_OWNER_JID || '254711815459@s.whatsapp.net';
 
 module.exports = () => ({
   name: "Bug Report",
@@ -48,18 +48,13 @@ module.exports = () => ({
       `♻️ Powered by *NIKOLA MD*`
     );
 
-    // Try to forward to the owner
-    if (OWNER_JID) {
-      try {
-        await Cypher.sendMessage(OWNER_JID, { text: reportText, mentions: [reporter] });
-      } catch (error) {
-        console.error('NIKOLA MD report forward error:', error.message);
-      }
-    } else {
-      // No owner configured — log to console so owner still sees it
-      console.log('--- NIKOLA MD Bug Report (no BOT_OWNER_JID set) ---');
-      console.log(reportText);
-      console.log('---');
+    // Forward to the owner
+    try {
+      await Cypher.sendMessage(OWNER_JID, { text: reportText, mentions: [reporter] });
+    } catch (error) {
+      console.error('NIKOLA MD report forward error:', error.message);
+      // Owner may not have a chat open with the bot yet; that's OK.
+      // The reporter's acknowledgement was already sent.
     }
   }
 });
